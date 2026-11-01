@@ -36,12 +36,12 @@ func main() {
 
 func stringParser(b []byte) (string, []byte, error) {
 	for i, v := range b {
-		if string(v) == ":" {
-			lenInt, err := strconv.Atoi(string(b[:i+1]))
+		if v == ':' {
+			lenInt, err := strconv.Atoi(string(b[:i]))
 			if err != nil {
 				return "", nil, err
 			}
-			return string(b[i+1 : i+lenInt]), b[i+lenInt+2:], nil
+			return string(b[i+1 : i+lenInt+1]), b[i+lenInt+1:], nil
 		}
 	}
 	return "", nil, nil
