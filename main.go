@@ -18,7 +18,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	byteString := []byte{'5', ':', 'h', 'e', 'l', 'l', 'o', 'i', '4', '2', 'e'}
+	byteString := []byte("5:helloi42e")
 	res, remaining, err := stringParser(byteString)
 	if err != nil {
 		fmt.Println(err)
@@ -28,7 +28,7 @@ func main() {
 	fmt.Println(res)
 	fmt.Println(string(remaining))
 
-	byteInt := []byte{'i', '4', '2', 'e', '5', ':', 'h', 'e', 'l', 'l', 'o'}
+	byteInt := []byte("i42e5:hello")
 	resInt, remainingInt, err := integerParser(byteInt)
 	if err != nil {
 		fmt.Println(err)
@@ -39,18 +39,33 @@ func main() {
 	fmt.Println(string(remainingInt))
 }
 
-// func bencodeUnmarshaller(b []byte) (string, []byte) {
-//	data := map[string]string{}
-// }
+func bencodeUnmarshaller(b []byte) (interface{}, []byte, error) {
+	switch firstChar := b[0]; {
+	case firstChar == 'l':
+		return listParser(b)
+	case firstChar >= '0' && firstChar <= '9':
+		return stringParser(b)
+	case firstChar == 'i':
+		return integerParser(b)
+	case firstChar == 'd':
+		return dictParser(b)
+	}
+	return nil, nil, errors.New("malformed benconde")
+}
 
-func integerParser(b []byte) (string, []byte, error) {
+func dictParser(b []byte) (interface{}, []byte, error) {
+	return nil, nil, errors.New("malformed bencode")
+}
+
+func integerParser(b []byte) (int, []byte, error) {
 	for i, v := range b {
 		if v == 'e' {
-			return string(b[1:i]), b[i+1:], nil
+			res, _ := strconv.Atoi(string(b[1:i]))
+			return res, b[i+1:], nil
 		}
 	}
 
-	return "", nil, errors.New("malformed bencode")
+	return 0, nil, errors.New("malformed bencode")
 }
 
 func stringParser(b []byte) (string, []byte, error) {
@@ -64,4 +79,19 @@ func stringParser(b []byte) (string, []byte, error) {
 		}
 	}
 	return "", nil, errors.New("malformed bencode")
+}
+
+func listParser(b []byte) ([]interface{}, []byte, error) {
+	res := []interface{}{}
+
+	for {
+		returnedRes, remaining, err := bencodeUnmarshaller(b)
+		if err != nil {
+			return nil, nil, err
+		}
+		res = append(res, returnedRes)
+		if remaining[0] == 'e' {
+			return res, remaining[1:], nil
+		}
+	}
 }
