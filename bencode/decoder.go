@@ -47,7 +47,7 @@ func dictParser(b []byte) (map[string]interface{}, []byte, error) {
 		if rest[0] == 'e' {
 			return dict, rest[1:], nil
 		}
-		key, remaining1, err := stringParser(rest[1:])
+		key, remaining1, err := stringParser(rest)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -100,7 +100,7 @@ func listParser(b []byte) ([]interface{}, []byte, error) {
 		if rest[0] == 'e' {
 			return val, rest[1:], nil
 		}
-		returnedVal, remaining, err := parse(rest[1:])
+		returnedVal, remaining, err := parse(rest)
 		if err != nil {
 			return nil, nil, err
 		}
