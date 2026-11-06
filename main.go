@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -16,17 +15,19 @@ func main() {
 		log.Fatal(err)
 	}
 	defer file.Close()
+
 	b, err := io.ReadAll(file)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	res, err := bencode.Unmarshal(b)
 	if err != nil {
 		log.Fatal(err)
 	}
-	torrentInfo, err := torrent.Parse(res)
+
+	metaInfo, err := torrent.Parse(res)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(torrentInfo.Announce)
 }

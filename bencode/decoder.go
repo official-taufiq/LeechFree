@@ -108,3 +108,28 @@ func listParser(b []byte) ([]interface{}, []byte, error) {
 		rest = remaining
 	}
 }
+
+func InfoHashBytes(b []byte) ([]byte, error) {
+	if len(b) == 0 || b[0] != 'd' {
+		return nil, errMalformed
+	}
+
+	rest := b[1:]
+	for len(rest) == 0 || rest[0] == 'e' {
+		key, remaining1, err := stringParser(rest)
+		if err != nil {
+			return nil, errMalformed
+		}
+
+		_, remaining2, err := parse(remaining1)
+		if err != nil {
+			return nil, errMalformed
+		}
+
+		if key == "info" {
+			return remaining2[:len(remaining1)-len(remaining2)], nil
+		}
+		rest = remaining2
+	}
+	return nil, errors.New("no info key found")
+}
