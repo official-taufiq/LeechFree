@@ -9,18 +9,23 @@ import (
 
 var errMalformed = errors.New("marlformed bencode")
 
-func Unmarshal(b []byte) (interface{}, error) {
+func Unmarshal(b []byte) (bc interface{}, infoHash []byte, err error) {
 	if len(b) == 0 {
-		return nil, fmt.Errorf("%w: empty torrent, no data found", errMalformed)
+		return nil, nil, fmt.Errorf("%w: empty torrent, no data found", errMalformed)
 	}
 	val, rest, err := parse(b)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if len(rest) != 0 {
-		return nil, fmt.Errorf("%w: trailing data", errMalformed)
+		return nil, nil, fmt.Errorf("%w: trailing data", errMalformed)
 	}
-	return val, nil
+	infoHash, err = InfoHashBytes(b)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return val, infoHash, nil
 }
 
 func parse(b []byte) (interface{}, []byte, error) {
@@ -115,7 +120,7 @@ func InfoHashBytes(b []byte) ([]byte, error) {
 	}
 
 	rest := b[1:]
-	for len(rest) == 0 || rest[0] == 'e' {
+	for len(rest) > 0 || rest[0] != 'e' {
 		key, remaining1, err := stringParser(rest)
 		if err != nil {
 			return nil, errMalformed
@@ -127,7 +132,7 @@ func InfoHashBytes(b []byte) ([]byte, error) {
 		}
 
 		if key == "info" {
-			return remaining2[:len(remaining1)-len(remaining2)], nil
+			return remaining1[:len(remaining1)-len(remaining2)], nil
 		}
 		rest = remaining2
 	}

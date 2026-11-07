@@ -2,6 +2,7 @@
 package torrent
 
 import (
+	"crypto/sha1"
 	"errors"
 )
 
@@ -38,7 +39,7 @@ func getInt(m map[string]interface{}, s string) int64 {
 	return v
 }
 
-func Parse(v interface{}) (*metaInfo, error) {
+func Parse(v interface{}, infoHash []byte) (*metaInfo, error) {
 	root, ok := v.(map[string]interface{})
 	if !ok {
 		return nil, errors.New("root is not a dict")
@@ -96,6 +97,6 @@ func Parse(v interface{}) (*metaInfo, error) {
 			t.Info.Files = append(t.Info.Files, f)
 		}
 	}
-
+	t.InfoHash = sha1.Sum(infoHash)
 	return t, nil
 }
