@@ -1,18 +1,15 @@
 package main
 
 import (
-	"crypto/rand"
-	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
-	"strconv"
-	"time"
 
 	"github.com/official-taufiq/LeechFree/bencode"
+	"github.com/official-taufiq/LeechFree/httpconn"
 	"github.com/official-taufiq/LeechFree/torrent"
+	"github.com/official-taufiq/LeechFree/udpconn"
 )
 
 func main() {
@@ -37,33 +34,28 @@ func main() {
 		log.Fatal(err)
 	}
 
-	peerID := make([]byte, 20)
-	rand.Read(peerID)
-
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-	}
-
 	u, err := url.Parse(metaInfo.Announce)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	v := url.Values{}
-	v.Add("info_hash", string(metaInfo.InfoHash[:]))
-	v.Add("peer_id", string(peerID))
-	v.Add("port", "6887")
-	v.Add("uploaded", "0")
-	v.Add("downloaded", "0")
-	v.Add("left", strconv.FormatInt(metaInfo.Info.Length, 10))
-	u.RawQuery = v.Encode()
-	fmt.Println(u.String())
-	req, err := http.NewRequest("GET", u.String(), nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = client.Do(req)
-	if err != nil {
-		log.Fatal(err)
+	switch u.Scheme {
+	case "http":
+		err := httpconn.Connect(u, metaInfo)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "https":
+		err := httpconn.Connect(u, metaInfo)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case "udp":
+		err := udpconn.Connect(u, metaInfo)
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+		log.Fatalf("invalid Scheme:%s, only supports http & udp", u.Scheme)
 	}
 }

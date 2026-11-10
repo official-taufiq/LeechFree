@@ -18,7 +18,7 @@ type Info struct {
 	Length      int64  // single-file mode
 	Files       []File // multi-file mode
 }
-type metaInfo struct {
+type MetaInfo struct {
 	Info         Info
 	Announce     string
 	AnnounceList [][]string
@@ -39,7 +39,7 @@ func getInt(m map[string]interface{}, s string) int64 {
 	return v
 }
 
-func Parse(v interface{}, infoHash []byte) (*metaInfo, error) {
+func Parse(v interface{}, infoHash []byte) (*MetaInfo, error) {
 	root, ok := v.(map[string]interface{})
 	if !ok {
 		return nil, errors.New("root is not a dict")
@@ -49,7 +49,7 @@ func Parse(v interface{}, infoHash []byte) (*metaInfo, error) {
 	if !ok {
 		return nil, errors.New("no info dict found")
 	}
-	t := &metaInfo{
+	t := &MetaInfo{
 		Announce:     getString(root, "announce"),
 		CreationDate: getInt(root, "creation date"),
 		Comment:      getString(root, "comment"),
